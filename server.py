@@ -141,20 +141,20 @@ def parse_multipart_form(raw_body: bytes, content_type: str):
 
 
 def upload_to_supabase_storage(file_bytes: bytes, filename: str, content_type: str) -> str:
-    """Sube un archivo al bucket 'media' de Supabase Storage y retorna su URL pública."""
+    """Sube un archivo al bucket 'Media' de Supabase Storage y retorna su URL pública."""
     ext = Path(filename).suffix.lower()
     unique_filename = f"{uuid.uuid4().hex}{ext}"
     path_in_bucket = f"uploads/{unique_filename}"
     
     # Subida del archivo binario
-    supabase.storage.from_("media").upload(
+    supabase.storage.from_("Media").upload(
         path=path_in_bucket,
         file=file_bytes,
         file_options={"content-type": content_type}
     )
     
     # Retornar la URL pública directa
-    public_url = supabase.storage.from_("media").get_public_url(path_in_bucket)
+    public_url = supabase.storage.from_("Media").get_public_url(path_in_bucket)
     return public_url
 
 
