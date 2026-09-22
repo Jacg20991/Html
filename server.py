@@ -146,14 +146,14 @@ def upload_to_supabase_storage(file_bytes: bytes, filename: str, content_type: s
     unique_filename = f"{uuid.uuid4().hex}{ext}"
     path_in_bucket = f"uploads/{unique_filename}"
     
-    # Subida del archivo binario
+    # Subida del archivo binario al bucket 'Media'
     supabase.storage.from_("Media").upload(
         path=path_in_bucket,
         file=file_bytes,
         file_options={"content-type": content_type}
     )
     
-    # Retornar la URL pública directa
+    # Retornar la URL pública directa desde 'Media'
     public_url = supabase.storage.from_("Media").get_public_url(path_in_bucket)
     return public_url
 
@@ -235,8 +235,46 @@ def vote_publication(publication_id, reaction, user_id=None):
     return publication
 
 
+def extract_storage_path(file_url: str) -> str:
+    """Extrae la ruta relativa dentro del bucket Media a partir de la URL pública."""
+    if not file_url:
+        return None
+    # Maneja la URL pública del bucket Media independientemente de mayúsculas/minúsculas
+    parts = file_url.split("/storage/v1/object/public/")
+    if len(parts) > 1:
+        sub_path = parts[1]
+        if sub_path.lower().startswith("media/"):
+            return sub_path[6:]  # Remueve 'Media/' o 'media/'
+    return None
+
+
 def delete_publication(publication_id):
     try:
+        # 1. Consultar la publicación para obtener las URLs de sus archivos
+        response = supabase.table("publicaciones").select("*").eq("id", publication_id).execute()
+        if response.data:
+            pub = response.data[0]
+            files_to_remove = []
+
+            if pub.get("image"):
+                img_path = extract_storage_path(pub["image"])
+                if img_path:
+                    files_to_remove.append(img_path)
+
+            if pub.get("video"):
+                vid_path = extract_storage_path(pub["video"])
+                if vid_path:
+                    files_to_remove.append(vid_path)
+
+            # 2. Eliminar archivos físicos del bucket 'Media'
+            if files_to_remove:
+                try:
+                    supabase.storage.from_("Media").remove(files_to_remove)
+                    print(f"Archivos eliminados del bucket Media: {files_to_remove}")
+                except Exception as storage_err:
+                    print(f"Error al eliminar archivos de Storage: {storage_err}")
+
+        # 3. Eliminar la fila en la tabla de base de datos
         supabase.table("publicaciones").delete().eq("id", publication_id).execute()
         return True
     except Exception as e:
@@ -372,15 +410,18 @@ class PublicationHandler(SimpleHTTPRequestHandler):
         self.send_error(404, "Ruta no encontrada")
 
     def send_json(self, payload, status=200):
-        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
-        self.send_header("Pragma", "no-cache")
-        self.send_header("Expires", "0")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
+        try:
+            body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+            self.send_header("Pragma", "no-cache")
+            self.send_header("Expires", "0")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
 
 
 if __name__ == "__main__":
