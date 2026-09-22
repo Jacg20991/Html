@@ -18,9 +18,8 @@ OWNER_DELETE_KEY = os.getenv("OWNER_DELETE_KEY", "INDIE_CREATE_OWNER_2026")
 # ==============================================================================
 # CONFIGURACIÓN DE SUPABASE
 # ==============================================================================
-# Reemplaza los valores entre comillas o configúralos como variables de entorno en Render.
-SUPABASE_URL = os.getenv("SUPABASE_URL", "TU_SUPABASE_URL_AQUI")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "TU_SUPABASE_ANON_KEY_AQUI")
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://clsnkvvwcjoyxwzodoxr.supabase.co")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_publishable_tlunp4Iouiftr97Xw-ZKxQ_tfY-JC7q")
 
 # Inicialización del cliente de Supabase
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
