@@ -1,5 +1,4 @@
 import json
-from logging import Handler
 import os
 import time
 import uuid
@@ -452,11 +451,9 @@ class PublicationHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    
-
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    server_address = ("", port)
-    httpd = ThreadingHTTPServer(server_address, Handler)
-    httpd.serve_forever()
+    port = int(os.getenv("PORT", 8000))
+    server = ThreadingHTTPServer(("0.0.0.0", port), PublicationHandler)
+    print(f"Servidor activo en el puerto {port}")
+    server.serve_forever()
