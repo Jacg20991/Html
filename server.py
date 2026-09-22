@@ -6,22 +6,30 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+# Importación del cliente oficial de Supabase
+from supabase import create_client, Client
+
 ROOT = Path(__file__).resolve().parent
-PUBLICATIONS_DIR = ROOT / "publicaciones"
-IMAGES_DIR = PUBLICATIONS_DIR / "images"
-VIDEOS_DIR = PUBLICATIONS_DIR / "videos"
+
 ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 ALLOWED_VIDEO_EXTENSIONS = {".mp4", ".webm", ".ogg", ".mov", ".avi"}
 OWNER_DELETE_KEY = os.getenv("OWNER_DELETE_KEY", "INDIE_CREATE_OWNER_2026")
-SETTINGS_PATH = ROOT / "settings.json"
+
+# ==============================================================================
+# CONFIGURACIÓN DE SUPABASE
+# ==============================================================================
+# Reemplaza los valores entre comillas o configúralos como variables de entorno en Render.
+SUPABASE_URL = os.getenv("SUPABASE_URL", "TU_SUPABASE_URL_AQUI")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "TU_SUPABASE_ANON_KEY_AQUI")
+
+# Inicialización del cliente de Supabase
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# ==============================================================================
+
 DEFAULT_SETTINGS = {
     "gameIcon": "/img/game/gameminecraft.png",
     "deleteEnabled": True,
 }
-
-PUBLICATIONS_DIR.mkdir(exist_ok=True)
-IMAGES_DIR.mkdir(exist_ok=True)
-VIDEOS_DIR.mkdir(exist_ok=True)
 
 
 def is_authorized_delete(key_value: str) -> bool:
@@ -29,21 +37,18 @@ def is_authorized_delete(key_value: str) -> bool:
 
 
 def load_settings():
-    if not SETTINGS_PATH.exists():
-        save_settings(DEFAULT_SETTINGS)
-        return dict(DEFAULT_SETTINGS)
     try:
-        with SETTINGS_PATH.open("r", encoding="utf-8") as f:
-            data = json.load(f)
-        if not isinstance(data, dict):
-            raise ValueError
-        merged = dict(DEFAULT_SETTINGS)
-        merged.update(data)
-        merged["deleteEnabled"] = bool(merged.get("deleteEnabled", True))
-        merged["gameIcon"] = str(merged.get("gameIcon") or DEFAULT_SETTINGS["gameIcon"])
-        return merged
-    except Exception:
-        save_settings(DEFAULT_SETTINGS)
+        response = supabase.table("settings").select("*").eq("id", "global").execute()
+        if response.data:
+            data = response.data[0].get("config", {})
+            merged = dict(DEFAULT_SETTINGS)
+            merged.update(data)
+            return merged
+        else:
+            save_settings(DEFAULT_SETTINGS)
+            return dict(DEFAULT_SETTINGS)
+    except Exception as e:
+        print("Error al cargar settings desde Supabase:", e)
         return dict(DEFAULT_SETTINGS)
 
 
@@ -53,8 +58,10 @@ def save_settings(payload):
         settings.update(payload)
     settings["deleteEnabled"] = bool(settings.get("deleteEnabled", True))
     settings["gameIcon"] = str(settings.get("gameIcon") or DEFAULT_SETTINGS["gameIcon"])
-    with SETTINGS_PATH.open("w", encoding="utf-8") as f:
-        json.dump(settings, f, ensure_ascii=False, indent=2)
+    try:
+        supabase.table("settings").upsert({"id": "global", "config": settings}).execute()
+    except Exception as e:
+        print("Error al guardar settings en Supabase:", e)
     return settings
 
 
@@ -134,113 +141,82 @@ def parse_multipart_form(raw_body: bytes, content_type: str):
     return result
 
 
-def get_publication_timestamp(publication):
-    if not isinstance(publication, dict):
-        return 0
-
-    for key in ("createdAt", "publishedAt"):
-        value = publication.get(key)
-        if value in (None, ""):
-            continue
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            continue
-    return 0
-
-
-def normalize_publication(publication):
-    if not isinstance(publication, dict):
-        return {}
-
-    normalized = dict(publication)
-    if "createdAt" not in normalized and "publishedAt" in normalized:
-        normalized["createdAt"] = normalized["publishedAt"]
-
-    normalized["title"] = str(normalized.get("title") or "")
-    normalized["description"] = normalized.get("description") if normalized.get("description") is not None else ""
-    normalized["image"] = normalized.get("image") or None
-    normalized["video"] = normalized.get("video") or None
-    normalized["likes"] = int(normalized.get("likes", 0) or 0)
-    normalized["dislikes"] = int(normalized.get("dislikes", 0) or 0)
-
-    votes = normalized.get("votes")
-    if isinstance(votes, dict):
-        normalized["votes"] = {str(k): str(v).lower() for k, v in votes.items() if str(v).lower() in {"like", "dislike"}}
-    else:
-        normalized["votes"] = {}
-
-    return normalized
+def upload_to_supabase_storage(file_bytes: bytes, filename: str, content_type: str) -> str:
+    """Sube un archivo al bucket 'media' de Supabase Storage y retorna su URL pública."""
+    ext = Path(filename).suffix.lower()
+    unique_filename = f"{uuid.uuid4().hex}{ext}"
+    path_in_bucket = f"uploads/{unique_filename}"
+    
+    # Subida del archivo binario
+    supabase.storage.from_("media").upload(
+        path=path_in_bucket,
+        file=file_bytes,
+        file_options={"content-type": content_type}
+    )
+    
+    # Retornar la URL pública directa
+    public_url = supabase.storage.from_("media").get_public_url(path_in_bucket)
+    return public_url
 
 
 def load_publications():
-    items = []
-    for file_path in sorted(PUBLICATIONS_DIR.glob("*.json")):
-        try:
-            with file_path.open("r", encoding="utf-8") as f:
-                data = json.load(f)
-            if isinstance(data, dict):
-                items.append(normalize_publication(data))
-        except Exception:
-            continue
-    return sorted(items, key=lambda item: get_publication_timestamp(item), reverse=True)
+    try:
+        response = supabase.table("publicaciones").select("*").order("createdAt", desc=True).execute()
+        return response.data or []
+    except Exception as e:
+        print("Error al cargar publicaciones:", e)
+        return []
 
 
 def save_publication(payload):
     publication = dict(payload or {})
     publication_id = publication.get("id") or f"pub-{uuid.uuid4().hex}"
     publication["id"] = publication_id
-    timestamp = get_publication_timestamp(publication)
-    if not timestamp:
-        timestamp = int(time.time() * 1000)
+    
+    timestamp = publication.get("createdAt") or int(time.time() * 1000)
     publication["createdAt"] = timestamp
-    publication["publishedAt"] = publication.get("publishedAt") or timestamp
     publication["likes"] = int(publication.get("likes", 0) or 0)
     publication["dislikes"] = int(publication.get("dislikes", 0) or 0)
-    votes = publication.get("votes")
-    if not isinstance(votes, dict):
+    
+    if "votes" not in publication or not isinstance(publication["votes"], dict):
         publication["votes"] = {}
-    else:
-        publication["votes"] = {str(key): str(value).lower() for key, value in votes.items() if str(value).lower() in {"like", "dislike"}}
-    file_path = PUBLICATIONS_DIR / f"{publication_id}.json"
-    with file_path.open("w", encoding="utf-8") as f:
-        json.dump(publication, f, ensure_ascii=False, indent=2)
+
+    try:
+        supabase.table("publicaciones").upsert(publication).execute()
+    except Exception as e:
+        print("Error al guardar publicación:", e)
+        
     return publication_id
 
 
 def vote_publication(publication_id, reaction, user_id=None):
-    file_path = PUBLICATIONS_DIR / f"{publication_id}.json"
-    if not file_path.exists():
-        return None
-
-    with file_path.open("r", encoding="utf-8") as f:
-        publication = json.load(f)
-
-    if not isinstance(publication, dict):
+    try:
+        response = supabase.table("publicaciones").select("*").eq("id", publication_id).execute()
+        if not response.data:
+            return None
+        publication = response.data[0]
+    except Exception as e:
+        print("Error buscando publicación para votar:", e)
         return None
 
     reaction = (reaction or "").strip().lower()
     if reaction not in {"like", "dislike"}:
         return None
 
-    user_key = str(user_id or "anonymous").strip()
-    if not user_key:
-        user_key = "anonymous"
+    user_key = str(user_id or "anonymous").strip() or "anonymous"
 
     publication["likes"] = int(publication.get("likes", 0) or 0)
     publication["dislikes"] = int(publication.get("dislikes", 0) or 0)
-    votes = publication.get("votes")
-    if not isinstance(votes, dict):
-        votes = {}
-    publication["votes"] = {str(k): str(v).lower() for k, v in votes.items() if str(v).lower() in {"like", "dislike"}}
+    votes = publication.get("votes") or {}
 
-    current_vote = publication["votes"].get(user_key)
+    current_vote = votes.get(user_key)
     if current_vote == reaction:
         if current_vote == "like":
             publication["likes"] = max(0, publication["likes"] - 1)
         elif current_vote == "dislike":
             publication["dislikes"] = max(0, publication["dislikes"] - 1)
-        publication["votes"].pop(user_key, None)
+        votes.pop(user_key, None)
+        publication["votes"] = votes
         save_publication(publication)
         return publication
 
@@ -254,38 +230,19 @@ def vote_publication(publication_id, reaction, user_id=None):
     else:
         publication["dislikes"] += 1
 
-    publication["votes"][user_key] = reaction
+    votes[user_key] = reaction
+    publication["votes"] = votes
     save_publication(publication)
     return publication
 
 
 def delete_publication(publication_id):
-    file_path = PUBLICATIONS_DIR / f"{publication_id}.json"
-    if not file_path.exists():
-        return False
-
     try:
-        with file_path.open("r", encoding="utf-8") as f:
-            publication = json.load(f)
-    except Exception:
-        publication = {}
-
-    image_path = publication.get("image")
-    if image_path and image_path.startswith("/publicaciones/images/"):
-        filename = image_path.split("/publicaciones/images/")[-1]
-        local_file = IMAGES_DIR / filename
-        if local_file.exists():
-            local_file.unlink()
-
-    video_path = publication.get("video")
-    if video_path and video_path.startswith("/publicaciones/videos/"):
-        filename = video_path.split("/publicaciones/videos/")[-1]
-        local_file = VIDEOS_DIR / filename
-        if local_file.exists():
-            local_file.unlink()
-
-    file_path.unlink(missing_ok=True)
-    return True
+        supabase.table("publicaciones").delete().eq("id", publication_id).execute()
+        return True
+    except Exception as e:
+        print("Error eliminando publicación:", e)
+        return False
 
 
 class PublicationHandler(SimpleHTTPRequestHandler):
@@ -301,21 +258,6 @@ class PublicationHandler(SimpleHTTPRequestHandler):
 
         if parsed.path == "/api/config":
             self.send_json(load_settings())
-            return
-
-        if parsed.path.startswith("/publicaciones/images/") or parsed.path.startswith("/publicaciones/videos/"):
-            requested = ROOT / parsed.path.lstrip("/")
-            if requested.exists() and requested.is_file():
-                self.send_response(200)
-                self.send_header("Content-Type", self.guess_type(str(requested)))
-                self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
-                self.send_header("Pragma", "no-cache")
-                self.send_header("Expires", "0")
-                self.end_headers()
-                with requested.open("rb") as f:
-                    self.wfile.write(f.read())
-                return
-            self.send_error(404, "Archivo no encontrado")
             return
 
         super().do_GET()
@@ -370,39 +312,27 @@ class PublicationHandler(SimpleHTTPRequestHandler):
             self.send_error(400, "La publicación debe incluir una descripción, una imagen o un video")
             return
 
-        if image_url and not image_url.startswith(("http://", "https://")):
-            self.send_error(400, "La URL de la imagen debe comenzar con http:// o https://")
-            return
-
-        if video_url and not video_url.startswith(("http://", "https://")):
-            self.send_error(400, "La URL del video debe comenzar con http:// o https://")
-            return
-
         image_value = image_url
         if isinstance(image_file_data, (bytes, bytearray)) and image_file_data:
-            filename = form.get("image_filename") or "image"
+            filename = form.get("image_filename") or "image.png"
             extension = Path(filename).suffix.lower()
             if extension not in ALLOWED_IMAGE_EXTENSIONS:
                 self.send_error(400, "El archivo debe ser una imagen válida: PNG, JPG, JPEG, WEBP o GIF")
                 return
 
-            image_name = f"{uuid.uuid4().hex}{extension}"
-            image_path = IMAGES_DIR / image_name
-            image_path.write_bytes(image_file_data)
-            image_value = f"/publicaciones/images/{image_name}"
+            c_type = f"image/{extension.lstrip('.')}"
+            image_value = upload_to_supabase_storage(image_file_data, filename, c_type)
 
         video_value = video_url
         if isinstance(video_file_data, (bytes, bytearray)) and video_file_data:
-            filename = form.get("video_filename") or "video"
+            filename = form.get("video_filename") or "video.mp4"
             extension = Path(filename).suffix.lower()
             if extension not in ALLOWED_VIDEO_EXTENSIONS:
                 self.send_error(400, "El archivo debe ser un video válido: MP4, WEBM, OGG, MOV o AVI")
                 return
 
-            video_name = f"{uuid.uuid4().hex}{extension}"
-            video_path = VIDEOS_DIR / video_name
-            video_path.write_bytes(video_file_data)
-            video_value = f"/publicaciones/videos/{video_name}"
+            c_type = f"video/{extension.lstrip('.')}"
+            video_value = upload_to_supabase_storage(video_file_data, filename, c_type)
 
         publication_id = f"pub-{uuid.uuid4().hex}"
         publication = {
@@ -412,7 +342,9 @@ class PublicationHandler(SimpleHTTPRequestHandler):
             "image": image_value or None,
             "video": video_value or None,
             "createdAt": int(time.time() * 1000),
-            "publishedAt": int(time.time() * 1000),
+            "likes": 0,
+            "dislikes": 0,
+            "votes": {}
         }
         save_publication(publication)
         self.send_json(publication, status=201)
