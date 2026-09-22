@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel de administración</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: '#7aa2ff',
+            secondary: '#a5b4fc',
+            surface: '#111827',
+            'surface-container-low': '#0f172a',
+            'surface-container': '#111827',
+            'outline-variant': '#334155',
+            'on-surface': '#e5e7eb',
+            'on-surface-variant': '#b7bfcc',
+            error: '#f87171',
+            success: '#4ade80',
+            background: '#0b1220'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="dark bg-background text-on-surface font-sans antialiased">
+  <main class="mx-auto max-w-2xl px-6 py-16">
+    <div id="loginCard" class="rounded-2xl border border-outline-variant bg-surface-container-low p-6 shadow-sm">
+      <div class="mb-6 flex items-center gap-3">
+        <img src="/img/admin.png?v=admin-white-2026" alt="Admin" class="h-12 w-12 object-contain" />
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-secondary">Acceso</p>
+          <h1 class="text-2xl font-bold text-on-surface">Panel de administrador</h1>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <label for="adminKey" class="block text-sm font-medium text-on-surface">Clave de propietario</label>
+        <input id="adminKey" type="password" placeholder="Introduce la clave" class="w-full rounded-md border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30" />
+
+        <button id="adminAccessButton" type="button" class="w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white">Entrar</button>
+      </div>
+
+      <div id="adminStatus" class="mt-4 hidden rounded-md border px-3 py-2 text-sm"></div>
+    </div>
+
+    <div id="adminSettings" class="mt-6 hidden rounded-2xl border border-outline-variant bg-surface-container-low p-6 shadow-sm">
+      <div class="mb-6">
+        <p class="text-xs uppercase tracking-[0.2em] text-secondary">Configuración</p>
+        <h2 class="mt-2 text-xl font-bold text-on-surface">Gestión del sitio</h2>
+      </div>
+
+      <div class="space-y-6">
+        <label class="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-outline-variant bg-surface px-4 py-3">
+          <div>
+            <div class="text-sm font-semibold text-on-surface">Borrado de publicaciones</div>
+            <div class="text-xs text-secondary">Permite o bloquea la eliminación de historias.</div>
+          </div>
+          <div class="relative inline-block">
+            <input id="deleteToggle" type="checkbox" class="peer sr-only" checked />
+            <span class="block h-7 w-12 rounded-full bg-emerald-500 transition peer-checked:bg-emerald-500 peer-checked:shadow-[0_0_12px_rgba(16,185,129,0.5)]"></span>
+            <span class="absolute left-1 top-1 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-5"></span>
+          </div>
+        </label>
+
+        <div>
+          <div class="mb-3 text-sm font-semibold text-on-surface">Icono del juego actual</div>
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <label class="game-option flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-outline-variant bg-surface p-2 text-center">
+              <input type="radio" name="gameIcon" value="offline" class="sr-only" />
+              <span class="text-xs font-semibold text-red-600">Offline</span>
+            </label>
+            <label class="game-option flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-outline-variant bg-surface p-2 text-center">
+              <input type="radio" name="gameIcon" value="/img/game/gameminecraft.png" class="sr-only" />
+              <img src="/img/game/gameminecraft.png" alt="Minecraft" class="h-12 w-12 object-contain opacity-90" />
+              <span class="text-xs font-medium text-on-surface">Minecraft</span>
+            </label>
+            <label class="game-option flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-outline-variant bg-surface p-2 text-center">
+              <input type="radio" name="gameIcon" value="/img/game/gamezomboid.png" class="sr-only" />
+              <img src="/img/game/gamezomboid.png" alt="Project Zomboid" class="h-12 w-12 object-contain opacity-90" />
+              <span class="text-xs font-medium text-on-surface">Project Zomboid</span>
+            </label>
+            <label class="game-option flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-outline-variant bg-surface p-2 text-center">
+              <input type="radio" name="gameIcon" value="/img/game/gamefall.png" class="sr-only" />
+              <img src="/img/game/gamefall.png" alt="Fall Guys" class="h-12 w-12 object-contain opacity-90" />
+              <span class="text-xs font-medium text-on-surface">Fall Guys</span>
+            </label>
+            <label class="game-option flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-outline-variant bg-surface p-2 text-center">
+              <input type="radio" name="gameIcon" value="/img/game/gameleft2.png" class="sr-only" />
+              <img src="/img/game/gameleft2.png" alt="Left 4 Dead 2" class="h-12 w-12 object-contain opacity-90" />
+              <span class="text-xs font-medium text-on-surface">Left 4 Dead 2</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const ADMIN_STORAGE_KEY = 'indie_admin_access';
+    const ADMIN_KEY_STORAGE = ADMIN_STORAGE_KEY + '_key';
+    const OWNER_DELETE_KEY = 'INDIE_CREATE_OWNER_2026';
+    const GAME_ICON_KEY = 'indie_game_icon';
+    const DELETE_ENABLED_KEY = 'indie_delete_enabled';
+
+    const keyInput = document.getElementById('adminKey');
+    const accessButton = document.getElementById('adminAccessButton');
+    const statusBox = document.getElementById('adminStatus');
+    const loginCard = document.getElementById('loginCard');
+    const adminSettings = document.getElementById('adminSettings');
+    const deleteToggle = document.getElementById('deleteToggle');
+    const gameOptions = document.querySelectorAll('input[name="gameIcon"]');
+
+    const showStatus = (message, isError = false) => {
+      statusBox.textContent = message;
+      statusBox.classList.remove('hidden', 'border-red-200', 'bg-red-50', 'text-red-700', 'border-green-200', 'bg-green-50', 'text-green-700');
+      if (isError) {
+        statusBox.classList.add('border-red-200', 'bg-red-50', 'text-red-700');
+      } else {
+        statusBox.classList.add('border-green-200', 'bg-green-50', 'text-green-700');
+      }
+    };
+
+    const loadSettings = async () => {
+      try {
+        const response = await fetch('/api/config');
+        if (!response.ok) {
+          throw new Error('No se pudo cargar la configuración');
+        }
+        const settings = await response.json();
+        if (settings && settings.gameIcon) {
+          localStorage.setItem(GAME_ICON_KEY, settings.gameIcon);
+        }
+        localStorage.setItem(DELETE_ENABLED_KEY, settings.deleteEnabled === false ? 'false' : 'true');
+        return settings;
+      } catch (error) {
+        return {};
+      }
+    };
+
+    const saveSettings = async (gameIcon, deleteEnabled) => {
+      try {
+        const response = await fetch('/api/config', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Key': OWNER_DELETE_KEY,
+          },
+          body: JSON.stringify({ gameIcon, deleteEnabled }),
+        });
+        if (!response.ok) {
+          throw new Error('No se pudo guardar la configuración');
+        }
+        return await response.json();
+      } catch (error) {
+        return null;
+      }
+    };
+
+    const applyGameSelection = () => {
+      const selected = localStorage.getItem(GAME_ICON_KEY) || '/img/game/gameminecraft.png';
+      gameOptions.forEach((option) => {
+        const label = option.closest('label');
+        const active = option.value === selected;
+        option.checked = active;
+        label.classList.toggle('border-emerald-400', active);
+        label.classList.toggle('bg-emerald-500/5', active);
+        label.classList.toggle('shadow-[0_0_12px_rgba(16,185,129,0.18)]', active);
+      });
+    };
+
+    const showAdminPanel = async () => {
+      const isLogged = localStorage.getItem(ADMIN_STORAGE_KEY) === 'true';
+      if (!isLogged) {
+        loginCard.classList.remove('hidden');
+        adminSettings.classList.add('hidden');
+        return;
+      }
+
+      await loadSettings();
+      loginCard.classList.add('hidden');
+      adminSettings.classList.remove('hidden');
+      deleteToggle.checked = localStorage.getItem(DELETE_ENABLED_KEY) !== 'false';
+      applyGameSelection();
+    };
+
+    const loginAdmin = () => {
+      const value = keyInput.value.trim();
+      if (value !== OWNER_DELETE_KEY) {
+        showStatus('Clave incorrecta. Solo el propietario puede acceder.', true);
+        localStorage.removeItem(ADMIN_STORAGE_KEY);
+        localStorage.removeItem(ADMIN_KEY_STORAGE);
+        return;
+      }
+
+      localStorage.setItem(ADMIN_STORAGE_KEY, 'true');
+      localStorage.setItem(ADMIN_KEY_STORAGE, OWNER_DELETE_KEY);
+      showStatus('Acceso concedido.');
+      showAdminPanel();
+    };
+
+    deleteToggle.addEventListener('change', async () => {
+      const enabled = deleteToggle.checked;
+      localStorage.setItem(DELETE_ENABLED_KEY, String(enabled));
+      await saveSettings(localStorage.getItem(GAME_ICON_KEY) || '/img/game/gameminecraft.png', enabled);
+      showStatus(enabled ? 'El borrado de publicaciones está activado.' : 'El borrado de publicaciones está desactivado.');
+    });
+
+    gameOptions.forEach((option) => {
+      option.addEventListener('change', async () => {
+        if (!option.checked) return;
+        localStorage.setItem(GAME_ICON_KEY, option.value);
+        applyGameSelection();
+        await saveSettings(option.value, localStorage.getItem(DELETE_ENABLED_KEY) !== 'false');
+        showStatus('Icono del juego actual actualizado.');
+      });
+    });
+
+    accessButton.addEventListener('click', loginAdmin);
+    keyInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        loginAdmin();
+      }
+    });
+
+    if (localStorage.getItem(ADMIN_STORAGE_KEY) === 'true') {
+      showAdminPanel();
+    }
+  </script>
+</body>
+</html>

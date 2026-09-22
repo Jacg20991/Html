@@ -1,0 +1,14 @@
+{
+  "id": "pub-ca44403999ae48f0836d21774949a61c",
+  "title": "El comienzo",
+  "description": "Creo que la pagina funciona! WAOS",
+  "image": "/publicaciones/images/pub-ca44403999ae48f0836d21774949a61c.png",
+  "createdAt": 1758461677000,
+  "likes": 2,
+  "dislikes": 0,
+  "votes": {
+    "user-1790025139400-6293b779bddbc8": "like",
+    "user-1790020015582-edd4c3798fc8b": "like"
+  },
+  "publishedAt": 1758461677000
+}
