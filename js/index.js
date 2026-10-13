@@ -15,6 +15,8 @@ const motds = [
 const randomMOTD = motds[Math.floor(Math.random() * motds.length)];
 document.title = randomMOTD;
 
+
+
 // Ajustes generales de la pagina principal y conexiones con sus elementos HTML.
 const API_URL = "/api/publicaciones";
 const ITEMS_PER_PAGE = 6;
@@ -42,6 +44,34 @@ const isDeleteEnabled = () =>
 const getSelectedGameIcon = () =>
   localStorage.getItem("indie_game_icon") || "/img/game/gameminecraft.png";
 
+const HERO_ELEMENT_IDS = {
+  eyebrow: "heroEyebrow",
+  title: "heroTitle",
+  description: "heroDescription",
+  peopleLabel: "heroPeopleLabel",
+  peopleValue: "heroPeopleValue",
+  peopleDetail: "heroPeopleDetail",
+  auraLabel: "heroAuraLabel",
+  auraValue: "heroAuraValue",
+  auraDetail: "heroAuraDetail",
+  finishedLabel: "heroFinishedLabel",
+  finishedValue: "heroFinishedValue",
+  finishedDetail: "heroFinishedDetail",
+  ipLabel: "heroIpLabel",
+  ipValue: "heroIpValue",
+  ipDetail: "heroIpDetail",
+};
+
+const applyHeroSettings = (hero) => {
+  if (!hero || typeof hero !== "object") return;
+  Object.entries(HERO_ELEMENT_IDS).forEach(([key, id]) => {
+    const element = document.getElementById(id);
+    if (element && typeof hero[key] === "string") {
+      element.textContent = hero[key];
+    }
+  });
+};
+
 const loadSettings = async () => {
   try {
     const response = await fetch("/api/config");
@@ -57,6 +87,7 @@ const loadSettings = async () => {
         "indie_delete_enabled",
         settings.deleteEnabled === false ? "false" : "true",
       );
+      applyHeroSettings(settings.hero);
     }
     return settings || {};
   } catch (error) {

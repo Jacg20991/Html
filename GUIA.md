@@ -15,6 +15,14 @@ cambio sin tocar el resto:
 | `js/tailwind-config-admin.js` | Colores disponibles en el panel.                                         |
 | `img/`                        | Iconos e imagenes que aparecen en la pagina.                             |
 
+## Editar la hero de la pagina principal
+
+Entra en «Admin» desde la portada y accede al panel con la clave de propietario.
+En «Hero de la página principal» puedes cambiar únicamente «Lo ma duro pa» y
+«Wow Minecraft y el Dont!!!». Pulsa «Guardar hero» para guardar los cambios; la
+página principal los carga desde la configuración del servidor y los actualiza
+al sincronizarse.
+
 ## Cambiar textos
 
 Abre `index.html` y busca el texto que quieras cambiar, por ejemplo el titulo de

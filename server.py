@@ -28,6 +28,10 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 DEFAULT_SETTINGS = {
     "gameIcon": "/img/game/gameminecraft.png",
     "deleteEnabled": True,
+    "hero": {
+        "eyebrow": "Lo ma duro pa",
+        "description": "Wow Minecraft y el Dont!!!",
+    },
 }
 
 
@@ -42,25 +46,46 @@ def load_settings():
             data = response.data[0].get("config", {})
             merged = dict(DEFAULT_SETTINGS)
             merged.update(data)
+            merged["hero"] = {
+                **DEFAULT_SETTINGS["hero"],
+                **{
+                    key: value
+                    for key, value in (
+                        data.get("hero", {}).items()
+                        if isinstance(data.get("hero"), dict)
+                        else []
+                    )
+                    if key in DEFAULT_SETTINGS["hero"] and isinstance(value, str)
+                },
+            }
             return merged
         else:
             save_settings(DEFAULT_SETTINGS)
             return dict(DEFAULT_SETTINGS)
     except Exception as e:
         print("Error al cargar settings desde Supabase:", e)
-        return dict(DEFAULT_SETTINGS)
+        raise RuntimeError("No se pudo cargar la configuración desde Supabase") from e
 
 
 def save_settings(payload):
     settings = dict(DEFAULT_SETTINGS)
     if isinstance(payload, dict):
         settings.update(payload)
+    hero_payload = payload.get("hero") if isinstance(payload, dict) else None
+    hero = dict(DEFAULT_SETTINGS["hero"])
+    if isinstance(hero_payload, dict):
+        for key in hero:
+            value = hero_payload.get(key)
+            if isinstance(value, str):
+                hero[key] = value[:100 if key == "eyebrow" else 500]
+    settings["hero"] = hero
     settings["deleteEnabled"] = bool(settings.get("deleteEnabled", True))
     settings["gameIcon"] = str(settings.get("gameIcon") or DEFAULT_SETTINGS["gameIcon"])
     try:
         supabase.table("settings").upsert({"id": "global", "config": settings}).execute()
     except Exception as e:
         print("Error al guardar settings en Supabase:", e)
+        raise RuntimeError("No se pudo guardar la configuración en Supabase") from e
     return settings
 
 
@@ -294,7 +319,11 @@ class PublicationHandler(SimpleHTTPRequestHandler):
             return
 
         if parsed.path == "/api/config":
-            self.send_json(load_settings())
+            try:
+                self.send_json(load_settings())
+            except Exception as e:
+                print("Error al responder /api/config:", e)
+                self.send_error(503, "Configuración temporalmente no disponible")
             return
 
         super().do_GET()
@@ -313,7 +342,12 @@ class PublicationHandler(SimpleHTTPRequestHandler):
                 payload = json.loads(raw_body.decode("utf-8")) if raw_body else {}
             except Exception:
                 payload = {}
-            settings = save_settings(payload)
+            try:
+                settings = save_settings(payload)
+            except Exception as e:
+                print("Error al guardar /api/config:", e)
+                self.send_error(503, "No se pudo guardar la configuración")
+                return
             self.send_json(settings, status=200)
             return
 
