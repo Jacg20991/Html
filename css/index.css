@@ -1,0 +1,11 @@
+/* Animacion usada por las tarjetas de historias que crea js/index.js. */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
