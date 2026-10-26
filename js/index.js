@@ -30,6 +30,9 @@ const imageFileInput = document.getElementById("publicationImage");
 const videoUrlInput = document.getElementById("publicationVideoUrl");
 const videoFileInput = document.getElementById("publicationVideo");
 const publisherInput = document.getElementById("publicationPublisher");
+const mediaViewer = document.getElementById("mediaViewer");
+const mediaViewerContent = document.getElementById("mediaViewerContent");
+const mediaViewerClose = document.getElementById("mediaViewerClose");
 const submitButton = form.querySelector('button[type="submit"]');
 let currentPage = 1;
 let lastRenderedPublicationIds = new Set();
@@ -37,6 +40,7 @@ let lastPublicationsSnapshot = "";
 let lastRenderedPageKey = "";
 let publicationCache = [];
 let isRenderingPublications = false;
+let activeVideoPlayback = null;
 
 // Estado del juego y permisos usados para mostrar acciones de administracion.
 const isAdminSession = () => localStorage.getItem(ADMIN_STORAGE_KEY) === "true";
@@ -247,6 +251,65 @@ const getVideoMimeType = (videoPath = "") => {
   return "video/mp4";
 };
 
+const closeMediaViewer = () => {
+  if (!mediaViewer.open) return;
+  mediaViewer.close();
+};
+
+const openMediaViewer = ({
+  type,
+  src,
+  alt = "",
+  mimeType = "",
+  sourceVideo = null,
+  startTime = 0,
+  wasPlaying = false,
+}) => {
+  if (!src || !["image", "video", "youtube"].includes(type)) return;
+
+  const media = type === "youtube"
+    ? document.createElement("iframe")
+    : document.createElement(type === "image" ? "img" : "video");
+
+  if (type === "image") {
+    media.src = src;
+    media.alt = alt;
+    media.draggable = false;
+  } else if (type === "video") {
+    media.controls = true;
+    media.playsInline = true;
+    media.preload = "auto";
+    media.addEventListener("loadedmetadata", () => {
+      if (startTime > 0 && Number.isFinite(media.duration)) {
+        media.currentTime = Math.min(startTime, media.duration);
+      }
+      if (wasPlaying) {
+        media.play().catch((error) => {
+          console.error("No se pudo reanudar el video en pantalla completa:", error);
+        });
+      }
+    }, { once: true });
+    const source = document.createElement("source");
+    source.src = src;
+    source.type = mimeType;
+    media.appendChild(source);
+    if (sourceVideo) {
+      sourceVideo.pause();
+      activeVideoPlayback = { source: sourceVideo, wasPlaying };
+    }
+  } else {
+    media.src = src;
+    media.title = alt || "Video de YouTube";
+    media.allow =
+      "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+    media.referrerPolicy = "strict-origin-when-cross-origin";
+    media.allowFullscreen = true;
+  }
+
+  mediaViewerContent.replaceChildren(media);
+  mediaViewer.showModal();
+};
+
 const setSubmitState = (isLoading) => {
   submitButton.disabled = isLoading;
   submitButton.textContent = isLoading ? "Guardando..." : "Crear publicación";
@@ -443,7 +506,7 @@ const createPublicationArticle = (publication, userId) => {
                 class="h-full w-full"
                 title="Video de YouTube"
                 loading="lazy"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 referrerpolicy="strict-origin-when-cross-origin"
                 allowfullscreen>
               </iframe>
@@ -464,14 +527,28 @@ const createPublicationArticle = (publication, userId) => {
 
   const imageMarkup = hasImageSource
     ? `
-      <div class="mb-4 overflow-hidden rounded-md border border-outline-variant/40 bg-surface inline-block">
-        <img src="${
+      <div class="mb-4">
+        <button type="button"
+          class="media-open block max-w-full overflow-hidden rounded-md border border-outline-variant/40 bg-surface p-0"
+          data-media-type="image"
+          data-media-src="${
       escapeHtml(
         `${publication.image}${
           publication.image.includes("?") ? "&" : "?"
         }_ts=${mediaStamp}`,
       )
-    }" alt="${escapeHtml(publication.title)}" class="block max-w-full h-auto" />
+    }"
+          data-media-alt="${escapeHtml(publication.title)}"
+          aria-label="Ver imagen en pantalla completa">
+          <img src="${
+      escapeHtml(
+        `${publication.image}${
+          publication.image.includes("?") ? "&" : "?"
+        }_ts=${mediaStamp}`,
+      )
+    }" alt="${escapeHtml(publication.title)    }"
+      class="block max-w-full h-auto cursor-zoom-in" />
+        </button>
       </div>
     `
     : "";
@@ -512,8 +589,8 @@ const createPublicationArticle = (publication, userId) => {
     <h3 class="font-headline text-2xl font-bold text-on-surface mt-2 mb-4">${
     escapeHtml(publication.title)
   }</h3>
-    ${videoMarkup || imageMarkup}
-    ${publication.image && publication.video ? imageMarkup + videoMarkup : ""}
+    ${imageMarkup}
+    ${videoMarkup}
     <p class="font-body text-sm text-on-surface-variant leading-relaxed mt-4">${
     escapeHtml(publicationDescription)
   }</p>
@@ -536,6 +613,63 @@ const createPublicationArticle = (publication, userId) => {
       </button>
     </div>
   `;
+
+  article.querySelectorAll(".media-open").forEach((button) => {
+    button.addEventListener("click", () => {
+      openMediaViewer({
+        type: button.dataset.mediaType,
+        src: button.dataset.mediaSrc,
+        alt: button.dataset.mediaAlt,
+      });
+    });
+  });
+
+  article.querySelectorAll("video source").forEach((source) => {
+    const video = source.closest("video");
+    const mediaContainer = video?.parentElement;
+    if (!video || !mediaContainer) return;
+    const expandButton = document.createElement("button");
+    expandButton.type = "button";
+    expandButton.className = "media-expand-button media-open";
+    expandButton.dataset.mediaType = "video";
+    expandButton.dataset.mediaSrc = source.src;
+    expandButton.dataset.mediaAlt = publication.title;
+    expandButton.innerHTML =
+      '<span class="material-symbols-outlined text-base" aria-hidden="true">fullscreen</span> Ver en pantalla completa';
+    expandButton.addEventListener("click", () => {
+      openMediaViewer({
+        type: "video",
+        src: expandButton.dataset.mediaSrc,
+        alt: expandButton.dataset.mediaAlt,
+        mimeType: source.type,
+        sourceVideo: video,
+        startTime: video.currentTime,
+        wasPlaying: !video.paused,
+      });
+    });
+    mediaContainer.insertAdjacentElement("afterend", expandButton);
+  });
+
+  article.querySelectorAll("iframe").forEach((iframe) => {
+    const mediaContainer = iframe.closest(".mb-4");
+    if (!mediaContainer) return;
+    const expandButton = document.createElement("button");
+    expandButton.type = "button";
+    expandButton.className = "media-expand-button media-open";
+    expandButton.dataset.mediaType = "youtube";
+    expandButton.dataset.mediaSrc = iframe.src;
+    expandButton.dataset.mediaAlt = publication.title;
+    expandButton.innerHTML =
+      '<span class="material-symbols-outlined text-base" aria-hidden="true">fullscreen</span> Ver en pantalla completa';
+    expandButton.addEventListener("click", () => {
+      openMediaViewer({
+        type: "youtube",
+        src: expandButton.dataset.mediaSrc,
+        alt: expandButton.dataset.mediaAlt,
+      });
+    });
+    mediaContainer.insertAdjacentElement("afterend", expandButton);
+  });
 
   article.querySelectorAll(".vote-button").forEach((button) => {
     button.addEventListener("click", async () => {
@@ -588,6 +722,35 @@ const createPublicationArticle = (publication, userId) => {
 
   return article;
 };
+
+mediaViewerClose.addEventListener("click", closeMediaViewer);
+mediaViewer.addEventListener("click", (event) => {
+  if (event.target === mediaViewer) {
+    closeMediaViewer();
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && mediaViewer.open) {
+    event.preventDefault();
+    closeMediaViewer();
+  }
+});
+mediaViewer.addEventListener("close", () => {
+  const viewerVideo = mediaViewerContent.querySelector("video");
+  if (activeVideoPlayback && viewerVideo) {
+    const { source, wasPlaying } = activeVideoPlayback;
+    if (viewerVideo.readyState >= 1 && Number.isFinite(viewerVideo.currentTime)) {
+      source.currentTime = viewerVideo.currentTime;
+    }
+    if (wasPlaying && !viewerVideo.paused) {
+      source.play().catch((error) => {
+        console.error("No se pudo reanudar el video de la publicación:", error);
+      });
+    }
+  }
+  activeVideoPlayback = null;
+  mediaViewerContent.replaceChildren();
+});
 
 const syncVisibleOrder = (desiredIds = []) => {
   const currentNodes = Array.from(list.querySelectorAll("article"));
@@ -844,8 +1007,11 @@ form.addEventListener("submit", async (event) => {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Error al guardar la publicación");
+      const errorBody = await response.json().catch(() => null);
+      const errorMessage = typeof errorBody?.error === "string"
+        ? errorBody.error
+        : `No se pudo guardar la publicación (HTTP ${response.status}).`;
+      throw new Error(errorMessage);
     }
 
     currentPage = 1;
@@ -854,7 +1020,12 @@ form.addEventListener("submit", async (event) => {
     await renderPublications();
   } catch (error) {
     console.error("No se pudo guardar la publicación:", error);
-    showStatus("No se pudo guardar la publicación.", true);
+    showStatus(
+      error instanceof Error
+        ? error.message
+        : "No se pudo guardar la publicación.",
+      true,
+    );
   } finally {
     setSubmitState(false);
   }

@@ -1,4 +1,5 @@
 import json
+import mimetypes
 import os
 import time
 import uuid
@@ -14,6 +15,13 @@ ROOT = Path(__file__).resolve().parent
 ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 ALLOWED_VIDEO_EXTENSIONS = {".mp4", ".webm", ".ogg", ".mov", ".avi"}
 MAX_PUBLISHER_LENGTH = 60
+UPLOAD_CONTENT_TYPES = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".mov": "video/quicktime",
+    ".ogg": "video/ogg",
+    ".avi": "video/x-msvideo",
+}
 OWNER_DELETE_KEY = os.getenv("OWNER_DELETE_KEY", "INDIE_CREATE_OWNER_2026")
 
 # ==============================================================================
@@ -182,6 +190,54 @@ def upload_to_supabase_storage(file_bytes: bytes, filename: str, content_type: s
     # Retornar la URL pública directa desde 'Media'
     public_url = supabase.storage.from_("Media").get_public_url(path_in_bucket)
     return public_url
+
+
+def get_publication_error_message(error: Exception, operation: str) -> str:
+    error_text = " ".join(
+        [
+            str(error),
+            str(getattr(error, "message", "") or ""),
+            str(getattr(error, "details", "") or ""),
+        ]
+    ).lower()
+    error_code = str(getattr(error, "code", "") or "").lower()
+
+    if "publisher" in error_text and (
+        "column" in error_text
+        or "schema cache" in error_text
+        or error_code in {"pgrst204", "42703"}
+    ):
+        return (
+            "Falta la columna publisher en la tabla publicaciones de Supabase. "
+            "Ejecuta: ALTER TABLE publicaciones ADD COLUMN IF NOT EXISTS "
+            "publisher text;"
+        )
+
+    if (
+        "row-level security" in error_text
+        or "permission denied" in error_text
+        or error_code == "42501"
+    ):
+        if operation.startswith("subir"):
+            return (
+                "Supabase Storage bloqueó la carga por sus políticas de acceso "
+                "(RLS). Revisa la política INSERT del bucket Media."
+            )
+        return (
+            "Supabase bloqueó la operación por sus políticas de acceso (RLS). "
+            "Revisa las políticas de la tabla publicaciones."
+        )
+
+    if "bucket" in error_text or "storage" in error_text:
+        return (
+            f"No se pudo {operation} en Supabase Storage. "
+            "Comprueba que exista el bucket Media y que permita subir archivos."
+        )
+
+    return (
+        f"Supabase no pudo {operation}. Revisa los registros del servidor "
+        "para ver el error detallado."
+    )
 
 
 def load_publications():
@@ -405,8 +461,23 @@ class PublicationHandler(SimpleHTTPRequestHandler):
                 self.send_error(400, "El archivo debe ser una imagen válida: PNG, JPG, JPEG, WEBP o GIF")
                 return
 
-            c_type = f"image/{extension.lstrip('.')}"
-            image_value = upload_to_supabase_storage(image_file_data, filename, c_type)
+            c_type = UPLOAD_CONTENT_TYPES.get(
+                extension,
+                mimetypes.guess_type(filename)[0] or "application/octet-stream",
+            )
+            try:
+                image_value = upload_to_supabase_storage(
+                    image_file_data,
+                    filename,
+                    c_type,
+                )
+            except Exception as e:
+                print("Error al subir imagen a Supabase Storage:", e)
+                self.send_json(
+                    {"error": get_publication_error_message(e, "subir la imagen")},
+                    status=503,
+                )
+                return
 
         video_value = video_url
         if isinstance(video_file_data, (bytes, bytearray)) and video_file_data:
@@ -416,8 +487,23 @@ class PublicationHandler(SimpleHTTPRequestHandler):
                 self.send_error(400, "El archivo debe ser un video válido: MP4, WEBM, OGG, MOV o AVI")
                 return
 
-            c_type = f"video/{extension.lstrip('.')}"
-            video_value = upload_to_supabase_storage(video_file_data, filename, c_type)
+            c_type = UPLOAD_CONTENT_TYPES.get(
+                extension,
+                mimetypes.guess_type(filename)[0] or "application/octet-stream",
+            )
+            try:
+                video_value = upload_to_supabase_storage(
+                    video_file_data,
+                    filename,
+                    c_type,
+                )
+            except Exception as e:
+                print("Error al subir video a Supabase Storage:", e)
+                self.send_json(
+                    {"error": get_publication_error_message(e, "subir el video")},
+                    status=503,
+                )
+                return
 
         publication_id = f"pub-{uuid.uuid4().hex}"
         publication = {
@@ -435,8 +521,12 @@ class PublicationHandler(SimpleHTTPRequestHandler):
         try:
             save_publication(publication)
         except RuntimeError as e:
-            print("Error al persistir la nueva publicación:", e)
-            self.send_error(503, "No se pudo guardar la publicación")
+            cause = e.__cause__ or e
+            print("Error al persistir la nueva publicación:", cause)
+            self.send_json(
+                {"error": get_publication_error_message(cause, "guardar la publicación")},
+                status=503,
+            )
             return
         self.send_json(publication, status=201)
 

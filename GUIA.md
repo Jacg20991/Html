@@ -102,13 +102,17 @@ a la sección correspondiente.
    `createPublicationArticle()` crea una tarjeta. `renderPublications()`
    conserva el orden y los nodos visibles para no reconstruir innecesariamente
    toda la lista.
-8. **Votos:** cada tarjeta asocia eventos a los botones y envía la reacción a
+8. **Visor multimedia:** las imágenes se abren al pulsarlas; los vídeos locales
+   y de YouTube conservan sus controles y tienen un botón para abrirlos en el
+   visor modal de pantalla completa. `openMediaViewer()` usa un `<dialog>` y
+   limpia los elementos al cerrar para detener la reproducción.
+9. **Votos:** cada tarjeta asocia eventos a los botones y envía la reacción a
    la ruta de publicación. La respuesta actualiza la caché y los contadores.
-9. **Alta de publicaciones:** el evento `submit` valida datos y extensiones,
+10. **Alta de publicaciones:** el evento `submit` valida datos y extensiones,
    arma un `FormData` y manda `POST /api/publicaciones`. Los límites de tamaño
    actuales del navegador son 5 MB para imágenes y 20 MB para vídeos; el
    servidor también debe validar los datos que recibe.
-10. **Sincronización:** `refreshLiveContent()` recarga configuración y
+11. **Sincronización:** `refreshLiveContent()` recarga configuración y
     publicaciones cada 1500 ms. Tenlo en cuenta al sumar peticiones: evita
     crear intervalos adicionales o solicitudes que se acumulen.
 
@@ -235,6 +239,11 @@ ADD COLUMN IF NOT EXISTS publisher text;
 Sin esa columna, Supabase rechazará las nuevas publicaciones y la API responderá
 con error en lugar de confirmar un guardado fallido. Comprueba alta, validación
 de longitud, paginación, refresco y datos antiguos que no tengan el campo.
+
+Si la API devuelve un error de RLS, revisa que la tabla permita `INSERT` al rol
+usado por el servidor; si subes archivos, verifica además el bucket `Media` y
+sus políticas de carga. No abras permisos públicos de escritura para resolverlo:
+las políticas deben limitarse al acceso necesario para la aplicación.
 
 ### Añadir una ruta de API
 
