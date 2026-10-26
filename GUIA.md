@@ -118,9 +118,8 @@ a la sección correspondiente.
 
 El modelo que espera el frontend por publicación contiene `id`, `publisher`,
 `title`, `description`, `image`, `video`, `createdAt`, `likes`, `dislikes` y
-`votes`. `publisher` contiene el nombre (hasta 60 caracteres) y es obligatorio
-al crear una publicación; los registros antiguos sin este campo se muestran
-como «Desconocido».
+`votes`. `publisher` contiene opcionalmente el nombre (hasta 60 caracteres);
+cuando falta, la publicación se muestra como «Anónimo».
 `votes` es un objeto indexado por identificador de usuario con valores
 `"like"` o `"dislike"`. `image` y `video` pueden estar ausentes o ser `null`.
 Las publicaciones se ordenan por fecha descendente y se muestran 6 por página.
@@ -179,7 +178,7 @@ políticas de acceso en el entorno de Supabase.
 | `GET /api/config` | Obtener configuración compartida. | JSON con `gameIcon`, `deleteEnabled` y `hero`. |
 | `POST /api/config` | Guardar configuración del panel. | JSON en el cuerpo; cabecera `X-Admin-Key`; devuelve la configuración guardada. |
 | `GET /api/publicaciones` | Obtener publicaciones. | Array JSON con los campos descritos arriba. |
-| `POST /api/publicaciones` | Crear publicación. | `multipart/form-data` con `publisher` (obligatorio, máximo 60 caracteres), `title`, `description` y, opcionalmente, `image`, `imageUrl`, `video` y `videoUrl`; devuelve la publicación creada. |
+| `POST /api/publicaciones` | Crear publicación. | `multipart/form-data` con `title`, `description` y, opcionalmente, `publisher` (máximo 60 caracteres), `image`, `imageUrl`, `video` y `videoUrl`; devuelve la publicación creada. |
 | `DELETE /api/publicaciones/{id}` | Votar si incluye `reaction` y `userId`; borrar si incluye una clave válida. | JSON de la publicación actualizada o confirmación de borrado. |
 
 La ruta `DELETE` se comparte actualmente entre votos y borrado. Si se cambia

@@ -434,10 +434,6 @@ class PublicationHandler(SimpleHTTPRequestHandler):
         has_description_content = bool(description)
         has_video_content = bool(video_url) or (isinstance(video_file_data, (bytes, bytearray)) and bool(video_file_data))
 
-        if not publisher:
-            self.send_error(400, "El nombre del publicador es obligatorio")
-            return
-
         if len(publisher) > MAX_PUBLISHER_LENGTH:
             self.send_error(
                 400,

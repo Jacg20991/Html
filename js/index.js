@@ -547,7 +547,7 @@ const createPublicationArticle = (publication, userId) => {
         }_ts=${mediaStamp}`,
       )
     }" alt="${escapeHtml(publication.title)    }"
-      class="block max-w-full h-auto cursor-zoom-in" />
+      class="block max-w-full h-auto cursor-pointer" />
         </button>
       </div>
     `
@@ -569,7 +569,7 @@ const createPublicationArticle = (publication, userId) => {
     ? "/img/nolike_black_filled.png"
     : "/img/nolike.png";
   const publicationDescription = publication.description ?? "";
-  const publicationPublisher = publication.publisher || "Desconocido";
+  const publicationPublisher = publication.publisher || "Anónimo";
 
   article.className =
     "p-6 bg-surface-container-low border border-outline-variant/50 w-full transition-all duration-500 ease-out animate-[fadeIn_0.45s_ease-out]";
@@ -906,12 +906,6 @@ form.addEventListener("submit", async (event) => {
 
   if (!title) {
     showStatus("Completa el título.", true);
-    return;
-  }
-
-  if (!publisher) {
-    showStatus("Escribe el nombre del publicador.", true);
-    publisherInput.focus();
     return;
   }
 
