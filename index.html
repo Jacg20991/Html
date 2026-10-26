@@ -136,6 +136,15 @@
         <form id="publicationForm"
           class="mb-0 rounded-xl border border-outline-variant/50 bg-surface-container-low p-5 space-y-4">
           <div>
+            <label for="publicationPublisher"
+              class="block text-sm font-medium text-on-surface mb-2">Publicador</label>
+            <input id="publicationPublisher" name="publisher" type="text"
+              maxlength="60" autocomplete="name" placeholder="Ej: Alex"
+              class="w-full rounded-md border border-outline-variant/60 bg-surface px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+              required>
+          </div>
+
+          <div>
             <label for="publicationTitle"
               class="block text-sm font-medium text-on-surface mb-2">Título</label>
             <input id="publicationTitle" name="title" type="text"

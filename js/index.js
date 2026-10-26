@@ -29,6 +29,7 @@ const imageUrlInput = document.getElementById("publicationImageUrl");
 const imageFileInput = document.getElementById("publicationImage");
 const videoUrlInput = document.getElementById("publicationVideoUrl");
 const videoFileInput = document.getElementById("publicationVideo");
+const publisherInput = document.getElementById("publicationPublisher");
 const submitButton = form.querySelector('button[type="submit"]');
 let currentPage = 1;
 let lastRenderedPublicationIds = new Set();
@@ -327,6 +328,9 @@ const renderPagination = (totalItems) => {
 // Preparacion de datos y creacion de cada tarjeta de publicacion.
 const normalizePublication = (publication = {}) => ({
   id: publication.id || "",
+  publisher: typeof publication.publisher === "string"
+    ? publication.publisher
+    : "",
   title: publication.title || "",
   description: publication.description ?? "",
   image: publication.image || null,
@@ -342,6 +346,7 @@ const normalizePublication = (publication = {}) => ({
 const buildPublicationsSnapshot = (items = []) =>
   JSON.stringify(items.map((publication) => ({
     id: publication.id,
+    publisher: publication.publisher || "",
     title: publication.title,
     description: publication.description,
     image: publication.image || "",
@@ -355,6 +360,7 @@ const buildPublicationsSnapshot = (items = []) =>
 const buildPublicationRenderSignature = (publication = {}) =>
   JSON.stringify({
     id: publication.id || "",
+    publisher: publication.publisher || "",
     title: publication.title || "",
     description: publication.description ?? "",
     image: publication.image || "",
@@ -486,6 +492,7 @@ const createPublicationArticle = (publication, userId) => {
     ? "/img/nolike_black_filled.png"
     : "/img/nolike.png";
   const publicationDescription = publication.description ?? "";
+  const publicationPublisher = publication.publisher || "Desconocido";
 
   article.className =
     "p-6 bg-surface-container-low border border-outline-variant/50 w-full transition-all duration-500 ease-out animate-[fadeIn_0.45s_ease-out]";
@@ -497,6 +504,11 @@ const createPublicationArticle = (publication, userId) => {
     <div class="mb-3 text-[11px] font-medium uppercase tracking-[0.14em] text-secondary">
       ${escapeHtml(formatDateTime(publicationTimestamp))}
     </div>
+    <p class="mb-2 text-xs font-label tracking-wide text-secondary">
+      Publicado por <span class="font-semibold text-on-surface">${
+    escapeHtml(publicationPublisher)
+  }</span>
+    </p>
     <h3 class="font-headline text-2xl font-bold text-on-surface mt-2 mb-4">${
     escapeHtml(publication.title)
   }</h3>
@@ -717,6 +729,7 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const title = document.getElementById("publicationTitle").value.trim();
+  const publisher = publisherInput.value.trim();
   const description = document.getElementById("publicationDescription").value
     .trim();
   const customUrl = imageUrlInput.value.trim();
@@ -730,6 +743,18 @@ form.addEventListener("submit", async (event) => {
 
   if (!title) {
     showStatus("Completa el título.", true);
+    return;
+  }
+
+  if (!publisher) {
+    showStatus("Escribe el nombre del publicador.", true);
+    publisherInput.focus();
+    return;
+  }
+
+  if (publisher.length > 60) {
+    showStatus("El nombre del publicador no puede superar 60 caracteres.", true);
+    publisherInput.focus();
     return;
   }
 
@@ -791,6 +816,7 @@ form.addEventListener("submit", async (event) => {
   try {
     setSubmitState(true);
     const formData = new FormData();
+    formData.append("publisher", publisher);
     formData.append("title", title);
     formData.append("description", description);
 

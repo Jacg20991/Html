@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parent
 
 ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 ALLOWED_VIDEO_EXTENSIONS = {".mp4", ".webm", ".ogg", ".mov", ".avi"}
+MAX_PUBLISHER_LENGTH = 60
 OWNER_DELETE_KEY = os.getenv("OWNER_DELETE_KEY", "INDIE_CREATE_OWNER_2026")
 
 # ==============================================================================
@@ -209,7 +210,8 @@ def save_publication(payload):
         supabase.table("publicaciones").upsert(publication).execute()
     except Exception as e:
         print("Error al guardar publicación:", e)
-        
+        raise RuntimeError("No se pudo guardar la publicación en Supabase") from e
+
     return publication_id
 
 
@@ -364,6 +366,7 @@ class PublicationHandler(SimpleHTTPRequestHandler):
         body = self.rfile.read(length)
         form = parse_multipart_form(body, content_type)
 
+        publisher = (form.get("publisher") or "").strip()
         title = (form.get("title") or "").strip()
         description = (form.get("description") or "").strip()
         image_url = (form.get("imageUrl") or "").strip()
@@ -374,6 +377,17 @@ class PublicationHandler(SimpleHTTPRequestHandler):
         has_image_content = bool(image_url) or (isinstance(image_file_data, (bytes, bytearray)) and bool(image_file_data))
         has_description_content = bool(description)
         has_video_content = bool(video_url) or (isinstance(video_file_data, (bytes, bytearray)) and bool(video_file_data))
+
+        if not publisher:
+            self.send_error(400, "El nombre del publicador es obligatorio")
+            return
+
+        if len(publisher) > MAX_PUBLISHER_LENGTH:
+            self.send_error(
+                400,
+                f"El nombre del publicador no puede superar {MAX_PUBLISHER_LENGTH} caracteres",
+            )
+            return
 
         if not title:
             self.send_error(400, "El título es obligatorio")
@@ -408,6 +422,7 @@ class PublicationHandler(SimpleHTTPRequestHandler):
         publication_id = f"pub-{uuid.uuid4().hex}"
         publication = {
             "id": publication_id,
+            "publisher": publisher,
             "title": title,
             "description": description,
             "image": image_value or None,
@@ -417,7 +432,12 @@ class PublicationHandler(SimpleHTTPRequestHandler):
             "dislikes": 0,
             "votes": {}
         }
-        save_publication(publication)
+        try:
+            save_publication(publication)
+        except RuntimeError as e:
+            print("Error al persistir la nueva publicación:", e)
+            self.send_error(503, "No se pudo guardar la publicación")
+            return
         self.send_json(publication, status=201)
 
     def do_DELETE(self):
@@ -434,7 +454,12 @@ class PublicationHandler(SimpleHTTPRequestHandler):
 
             reaction = dict(parse_qs(parsed.query)).get("reaction", [""])[0]
             user_id = dict(parse_qs(parsed.query)).get("userId", [""])[0]
-            updated = vote_publication(publication_id, reaction, user_id)
+            try:
+                updated = vote_publication(publication_id, reaction, user_id)
+            except RuntimeError as e:
+                print("Error al persistir el voto:", e)
+                self.send_error(503, "No se pudo guardar la reacción")
+                return
             if updated is None:
                 self.send_error(400, "Reacción inválida")
                 return
