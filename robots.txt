@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.tusitio.com/sitemap.xml
+Sitemap: https://indie-create.duckdns.org/sitemap.xml
