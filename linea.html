@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Historia de la luz en la física</title>
+<style>
+:root{--bg:#f7f6f2;--fg:#1c1b22;--card:#fff;--mut:#5b5a66;--line:#d9d7cf;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14131a;--fg:#ecebf2;--card:#1e1d27;--mut:#a9a8b8;--line:#3a3947;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14131a;--fg:#ecebf2;--card:#1e1d27;--mut:#a9a8b8;--line:#3a3947;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 Georgia,"Times New Roman",serif}
+header{padding:48px 20px 24px;text-align:center;background:linear-gradient(90deg,#b45309,#0f766e,#be123c,#4338ca,#0369a1,#7e22ce,#c026d3);color:#fff}
+h1{margin:0 0 8px;font-size:clamp(28px,6vw,46px);letter-spacing:.5px}
+header p{margin:0 auto;max-width:680px;font:15px/1.5 system-ui,sans-serif;opacity:.95}
+.wrap{max-width:880px;margin:0 auto;padding:0 16px 40px;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.evo{margin:24px 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;font-size:13px}
+.evo span{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px 11px}
+.evo i{color:var(--mut);font-style:normal}
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:6px;overflow-x:auto;padding:8px 0;background:var(--bg)}
+.nav button{flex:none;border:0;border-radius:99px;padding:6px 12px;color:#fff;font:600 12px system-ui,sans-serif;cursor:pointer;background:var(--c)}
+.era{margin-top:36px}
+.era h2{margin:0;padding:14px 18px;border-radius:12px;color:#fff;background:var(--c);font:700 20px Georgia,serif}
+.era h2 small{display:block;font:400 13px system-ui,sans-serif;opacity:.92}
+.sp{position:relative;margin:0;padding:8px 0 0 30px;border-left:3px solid var(--c);margin-left:14px}
+.ev{position:relative;margin:18px 0;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:64px 1fr;gap:4px 14px}
+.ev:before{content:"";position:absolute;left:-41px;top:20px;width:15px;height:15px;border-radius:50%;background:var(--c);border:3px solid var(--bg)}
+.ic{width:64px;height:64px;color:var(--c);border:1.5px solid var(--c);border-radius:12px;padding:8px;grid-row:span 2}
+.ic svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.yr{font:700 22px Georgia,serif;color:var(--c)}
+.k{display:inline-block;margin-left:8px;padding:1px 9px;border-radius:99px;border:1px solid var(--c);color:var(--c);font:600 11px system-ui,sans-serif;vertical-align:middle}
+.who{font-weight:700}
+.ev h3{margin:0;font:700 17px Georgia,serif}
+.ev p{margin:4px 0 0;font-size:14.5px}
+.m{color:var(--mut)}
+.ev .full{grid-column:1/-1}
+.cl{border-top:1px dashed var(--line);margin-top:6px;padding-top:6px;font-size:13px}
+.a{--c:#b45309}.b{--c:#0f766e}.r{--c:#be123c}.n{--c:#4338ca}.d{--c:#0369a1}.c{--c:#7e22ce}.s{--c:#c026d3}
+.ref{margin-top:44px}.ref h2{font:700 22px Georgia,serif}
+.ref p{font-size:13.5px;padding-left:2em;text-indent:-2em;margin:8px 0}
+.note{font-size:13px;color:var(--mut);margin-top:16px}
+@media(max-width:520px){.ev{grid-template-columns:48px 1fr}.ic{width:48px;height:48px;padding:6px}.sp{padding-left:22px}.ev:before{left:-33px}}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="eye" viewBox="0 0 40 40"><path d="M3 20c6-10 28-10 34 0-6 10-28 10-34 0z"/><circle cx="20" cy="20" r="5"/></symbol>
+<symbol id="rays" viewBox="0 0 40 40"><circle cx="8" cy="20" r="3"/><path d="M13 20h24M13 15l22-8M13 25l22 8"/></symbol>
+<symbol id="lens" viewBox="0 0 40 40"><path d="M20 5c9 8 9 22 0 30-9-8-9-22 0-30zM2 20h10M28 20h10"/></symbol>
+<symbol id="prism" viewBox="0 0 40 40"><path d="M16 8l12 22H4zM2 22l10-4M28 20l10-4M29 24l9 2M28 28l9 6"/></symbol>
+<symbol id="wave" viewBox="0 0 40 40"><path d="M2 20c4-14 8-14 12 0s8 14 12 0 8-14 12 0"/></symbol>
+<symbol id="particle" viewBox="0 0 40 40"><circle cx="28" cy="20" r="6"/><path d="M2 20h14M10 14l6 6-6 6"/></symbol>
+<symbol id="spectrum" viewBox="0 0 40 40"><path d="M6 32V12M13 32V6M20 32V16M27 32V8M34 32V20"/></symbol>
+<symbol id="laser" viewBox="0 0 40 40"><rect x="3" y="14" width="12" height="12" rx="2"/><path d="M15 20h22M30 14l7 6-7 6"/></symbol>
+<symbol id="fiber" viewBox="0 0 40 40"><path d="M3 30c10 0 6-20 16-20s6 20 18 20M3 24c10 0 6-20 16-20"/></symbol>
+<symbol id="tele" viewBox="0 0 40 40"><path d="M5 26l24-12 3 6L8 32zM18 29l-6 8M18 29l6 8"/></symbol>
+<symbol id="atom" viewBox="0 0 40 40"><circle cx="20" cy="20" r="3"/><ellipse cx="20" cy="20" rx="16" ry="6"/><ellipse cx="20" cy="20" rx="16" ry="6" transform="rotate(60 20 20)"/><ellipse cx="20" cy="20" rx="16" ry="6" transform="rotate(120 20 20)"/></symbol>
+<symbol id="mag" viewBox="0 0 40 40"><path d="M10 6v16a10 10 0 0020 0V6h-8v16a2 2 0 01-4 0V6z"/></symbol>
+</defs></svg>
+<header><h1>La historia de la luz</h1><p>De los “rayos visuales” de la Antigüedad a la fotónica cuántica: cómo cambió, en 2500 años, la pregunta sobre qué es la luz.</p></header>
+<div class="wrap">
+<div class="evo"><span>Emisión del ojo</span><i>→</i><span>Luz que llega al ojo</span><i>→</i><span>Corpúsculos</span><i>→</i><span>Ondas</span><i>→</i><span>Onda electromagnética</span><i>→</i><span>Cuantos / dualidad</span><i>→</i><span>QED: fotones</span></div>
+<div class="nav" id="nav"></div>
+<main id="t"></main>
+<section class="ref"><h2>Referencias (APA 7)</h2><div id="refs"></div>
+<p class="note">Notas de rigor: Snell y Descartes comparten una disputa de prioridad; el resultado de Michelson–Morley (1887) pertenece al siglo XIX aunque se asocia a la física moderna; la propuesta de Einstein de 1905 fue una hipótesis “heurística”, aceptada plenamente tras Millikan y Compton. Verifique volúmenes, páginas y enlaces en las bases de datos de su biblioteca antes de citar.</p></section>
+</div>
+<script>
+var E={a:["Antigüedad","c. 500 a. C. – c. 150 d. C. · Filosofía y geometría de la visión"],b:["Edad Media","Siglos X–XIV · Óptica experimental árabe y su transmisión"],r:["Renacimiento y Revolución Científica","1490 – 1676 · Instrumentos, leyes y velocidad finita"],n:["Siglos XVII–XVIII","Rayos, colores y el debate corpúsculo–onda"],d:["Siglo XIX","Interferencia, polarización, espectros y electromagnetismo"],c:["Siglo XX","Cuantos, relatividad, QED, láser y entrelazamiento"],s:["Siglo XXI","Fotónica, pulsos ultracortos y tecnologías cuánticas"]};
+var D=[
+["a","eye","Hipótesis","c. 500 a. C.","Escuela pitagórica","Rayos visuales","Se supone que el ojo emite rayos que “tocan” los objetos y así se ve.","Primer modelo causal de la visión: la teoría de la emisión.","Ojo con rayos que salen hacia un árbol."],
+["a","eye","Hipótesis","c. 360 a. C.","Platón","El fuego visual (Timeo)","Un “fuego” del ojo se une a la luz del día y forma un cuerpo visual continuo.","Mezcla emisión y luz externa; dominó siglos de filosofía.","Ojo y rayo solar fusionándose."],
+["a","rays","Teoría","c. 350 a. C.","Aristóteles","La luz como acto de lo transparente","La luz no es un cuerpo ni sale del ojo: es la actualización de un medio transparente (diáfano).","Primera alternativa no corpuscular; anticipa la idea de un medio.","Sol, medio transparente y observador."],
+["a","rays","Teoría matemática","c. 300 a. C.","Euclides","Óptica geométrica","Trata la visión con rayos rectos y demuestra proposiciones sobre tamaños y distancias aparentes.","Funda la óptica geométrica: el rayo como herramienta matemática.","Cono visual con ángulos."],
+["a","lens","Estudio empírico","c. 150 d. C.","Claudio Ptolomeo","Tablas de refracción","En su Óptica mide ángulos de refracción aire–agua–vidrio, sin hallar la ley exacta.","Primer estudio cuantitativo de la refracción.","Varilla “quebrada” en un recipiente con agua."],
+["b","lens","Descubrimiento","c. 984","Ibn Sahl","Ley de refracción","En un tratado sobre espejos ardientes y lentes usa una relación equivalente a la ley de refracción.","Formulación más antigua conocida (Rashed, 1990).","Lente plano-convexa con rayos."],
+["b","eye","Teoría y experimento","1011–1021","Alhacén (Ibn al-Haytham)","Kitāb al-Manāẓir","Refuta la emisión: se ve porque la luz de los objetos entra al ojo. Experimenta con cámara oscura, reflexión y refracción.","Funda la óptica experimental; traducido al latín hacia 1200, influye en Bacon y Kepler.","Cámara oscura con imagen invertida."],
+["b","spectrum","Teoría","c. 1304–1310","Teodorico de Freiberg y Kamāl al-Dīn al-Fārisī","Explicación del arcoíris","Independientemente, lo explican por refracción y reflexión interna en gotas, con esferas llenas de agua.","Primer modelo físico correcto del arcoíris primario.","Gota con trayectoria interna del rayo."],
+["r","eye","Observación","c. 1490–1519","Leonardo da Vinci","Cámara oscura y ojo","En sus cuadernos describe la cámara oscura y la compara con el ojo; estudia sombras y perspectiva.","Une arte, óptica y fisiología.","Página de cuaderno con ojo y rayos."],
+["r","eye","Teoría","1604","Johannes Kepler","Imagen retiniana","El cristalino forma una imagen invertida en la retina; la intensidad disminuye con el cuadrado de la distancia. En 1611 describe el telescopio kepleriano.","Base de la óptica fisiológica moderna.","Esquema del ojo con imagen invertida."],
+["r","tele","Observación","1609–1610","Galileo Galilei","Telescopio y Sidereus Nuncius","Perfecciona el telescopio y observa lunas de Júpiter, cráteres lunares y fases de Venus.","La luz se vuelve instrumento de descubrimiento astronómico.","Telescopio y Júpiter con sus lunas."],
+["r","lens","Descubrimiento","1621–1637","Willebrord Snell y René Descartes","Ley de refracción y arcoíris","Snell la halla hacia 1621 (inédita); Descartes la publica en La Dioptrique (1637), explica el arcoíris y concibe la luz como presión instantánea.","Ley central: sen θ₁ / sen θ₂ = constante. La prioridad es discutida.","Rayo cruzando aire–vidrio con normales."],
+["r","rays","Principio","1662","Pierre de Fermat","Tiempo mínimo","La luz sigue el trayecto de menor tiempo; de ahí deduce la ley de refracción.","Primer principio variacional de la física.","Dos medios con trayectoria quebrada óptima."],
+["r","wave","Descubrimiento","1665","Grimaldi y Robert Hooke","Difracción y colores de láminas","Grimaldi (obra póstuma) describe la difracción; Hooke, en Micrographia, observa colores en láminas delgadas y sugiere pulsos ondulatorios.","Primeros fenómenos que la óptica de rayos no explica.","Sombra de borde difuso."],
+["r","tele","Observación","1676","Ole Rømer","Velocidad finita de la luz","Los eclipses de Ío se retrasan cuando Júpiter se aleja; la luz tarda en llegar.","Primera prueba de que c es finita (Huygens estimó ≈220 000 km/s).","Órbitas de Tierra, Júpiter e Ío."],
+["n","prism","Experimento","1666–1672","Isaac Newton","Luz blanca descompuesta","Con prismas muestra que la luz blanca es una mezcla de colores refractados distinto; informa a la Royal Society en 1672.","Origen de la espectroscopía y la teoría del color.","Prisma con espectro."],
+["n","wave","Teoría","1678 / 1690","Christiaan Huygens","Teoría ondulatoria","Cada punto de un frente de onda emite ondas secundarias; explica reflexión, refracción y la doble refracción del espato de Islandia (Traité, 1690).","Primera teoría ondulatoria matemática; el principio sigue vigente.","Frentes de onda con ondículas."],
+["n","particle","Teoría","1704","Isaac Newton","Opticks","Reúne su óptica experimental (anillos de Newton) y favorece una luz corpuscular, con matices como los “accesos” de reflexión.","Su prestigio mantuvo dominante el modelo corpuscular casi un siglo.","Rayos como trayectorias de partículas."],
+["d","spectrum","Descubrimiento","1800–1801","William Herschel y Johann Ritter","Infrarrojo y ultravioleta","Herschel detecta calor más allá del rojo; Ritter, efectos químicos más allá del violeta.","El espectro visible es sólo una parte de uno mayor.","Espectro con zonas invisibles marcadas."],
+["d","wave","Experimento","1801–1803","Thomas Young","Interferencia","Enuncia el principio de interferencia (1801) y la experiencia de las dos rendijas (1803): franjas claras y oscuras.","Evidencia clave del carácter ondulatorio.","Patrón de franjas de doble rendija."],
+["d","wave","Descubrimiento","1808","Étienne-Louis Malus","Polarización","Al mirar por calcita la luz reflejada en una ventana, descubre que adquiere una asimetría direccional.","Anuncia que la luz no es una onda longitudinal.","Cristal de calcita y luz reflejada."],
+["d","wave","Teoría","1815–1821","Augustin-Jean Fresnel","Ondas transversales y difracción","Combina Huygens con la interferencia; su memoria de 1819 gana el premio de la Academia y Arago confirma el punto brillante predicho por Poisson. Hacia 1821 propone ondas transversales.","Consolida la teoría ondulatoria y plantea un éter elástico.","Disco opaco con punto central luminoso."],
+["d","spectrum","Descubrimiento","1814–1859","Fraunhofer, Kirchhoff y Bunsen","Líneas espectrales","Fraunhofer cataloga las líneas oscuras del Sol (1814); Kirchhoff y Bunsen muestran que cada elemento tiene su espectro (1859).","Nace la espectroscopía y la astrofísica química.","Espectro solar con líneas oscuras."],
+["d","tele","Experimento","1849–1862","Fizeau y Foucault","Medida terrestre de c","Fizeau usa una rueda dentada (1849, ≈313 000 km/s); Foucault, con espejo giratorio, halla la luz más lenta en agua (1850) y mide ≈298 000 km/s (1862).","El resultado en agua favorece el modelo ondulatorio.","Rueda dentada y espejo giratorio."],
+["d","mag","Descubrimiento","1845","Michael Faraday","Efecto Faraday","Un campo magnético intenso rota el plano de polarización de la luz en vidrio.","Primera pista de un vínculo entre luz y magnetismo.","Vidrio entre los polos de un imán."],
+["d","wave","Teoría","1865","James Clerk Maxwell","Luz = onda electromagnética","Sus ecuaciones predicen ondas electromagnéticas con velocidad igual a la de la luz; concluye que la luz es una de ellas.","Unifica electricidad, magnetismo y óptica.","Campos E y B perpendiculares."],
+["d","tele","Experimento","1887","Michelson y Morley","Búsqueda del éter","Su interferómetro no detecta el “viento de éter” esperado.","Resultado nulo que cuestiona el éter y prepara la relatividad.","Interferómetro de brazos perpendiculares."],
+["d","wave","Experimento","1887–1888","Heinrich Hertz","Ondas electromagnéticas","Genera y detecta ondas de radio que se reflejan, refractan y polarizan como la luz; en 1887 observa también el efecto fotoeléctrico.","Confirma a Maxwell; abre la era de la radio.","Chispero y antena receptora."],
+["c","particle","Hipótesis","1900","Max Planck","Cuantos de energía","Para explicar el cuerpo negro supone que la energía se intercambia en paquetes E = hν.","Nace la física cuántica; Planck lo trató al inicio como recurso de cálculo.","Curvas de radiación de cuerpo negro."],
+["c","particle","Hipótesis","1905","Albert Einstein","Cuantos de luz y relatividad especial","Propone, como punto de vista heurístico, que la luz se absorbe y emite en cuantos hν, y explica el efecto fotoeléctrico. Ese año postula también la invariancia de c.","Nobel 1921; verificado por Millikan (1914–1916). Reabre el carácter corpuscular.","Luz que expulsa electrones de un metal."],
+["c","wave","Experimento","1909","G. I. Taylor y Albert Einstein","Interferencia débil y dualidad","Taylor logra franjas con luz de intensidad muy baja; Einstein sostiene en Salzburgo que la luz exige onda y cuanto a la vez.","Primer planteamiento claro de la dualidad.","Placa fotográfica con franjas tenues."],
+["c","atom","Teoría","1913","Niels Bohr","Átomo cuantizado","Los átomos emiten o absorben luz al saltar entre niveles de energía; explica las líneas del hidrógeno.","Conecta espectros con estructura atómica.","Átomo con saltos y fotón emitido."],
+["c","tele","Experimento","1919","Eddington, Dyson y colaboradores","Curvatura de la luz","En el eclipse del 29 de mayo las estrellas cercanas al Sol parecen desplazadas, de acuerdo con la relatividad general (1915).","La luz sigue la geometría del espacio-tiempo.","Eclipse con estrellas desplazadas."],
+["c","particle","Experimento","1923","Arthur Compton","Efecto Compton","Rayos X dispersados por electrones pierden energía como en un choque con partículas de momento h/λ. “Fotón” se acuña en 1926 (G. N. Lewis).","Prueba convincente de que la luz transporta momento.","Choque fotón–electrón."],
+["c","wave","Teoría","1924–1927","De Broglie y Niels Bohr","Dualidad y complementariedad","De Broglie extiende la dualidad a la materia (1924); Bohr propone (1927) que onda y partícula son aspectos complementarios.","Consolida la mecánica cuántica.","Onda con un paquete localizado."],
+["c","atom","Teoría","1927–1949","Dirac, Feynman, Schwinger, Tomonaga","Electrodinámica cuántica","Dirac cuantiza el campo electromagnético (1927); entre 1947 y 1949 se logra una teoría consistente con renormalización. Nobel 1965.","Una de las teorías más precisas de la física: la luz como intercambio de fotones.","Diagrama de Feynman."],
+["c","laser","Tecnología","1960","Theodore Maiman","Primer láser","Con un cristal de rubí obtiene emisión estimulada (Einstein, 1917; máser de Townes, 1954; propuesta Schawlow–Townes, 1958).","Abre la era del láser en medicina, industria y ciencia.","Barra de rubí y haz rojo coherente."],
+["c","particle","Experimento","1963–1977","Glauber; Kimble, Dagenais y Mandel","Óptica cuántica","Glauber formula la teoría cuántica de la coherencia (1963); en 1977 se observa antiagrupamiento de fotones, firma de luz no clásica.","Evidencia directa de fotones individuales.","Detectores con clics separados."],
+["c","fiber","Tecnología","1966–1970","Kao, Hockham; Corning","Fibra óptica","Kao y Hockham (1966) muestran que el vidrio muy puro puede guiar luz con pocas pérdidas; en 1970 Corning alcanza ≈20 dB/km.","Base de las telecomunicaciones; Nobel 2009 a Kao.","Fibra con luz guiada por reflexión total."],
+["c","atom","Experimento","1972–1982","Freedman y Clauser; Aspect","Entrelazamiento y desigualdades de Bell","Experimentos con fotones entrelazados violan las desigualdades de Bell; Aspect (1982) usa polarizadores conmutados.","Descarta variables ocultas locales; Nobel 2022 (Aspect, Clauser, Zeilinger).","Fuente central y dos detectores."],
+["s","spectrum","Tecnología","c. 2000","Hänsch y Hall","Peine de frecuencias ópticas","Permite medir frecuencias de luz con precisión extrema. Nobel 2005.","Base de los relojes ópticos.","Peine de líneas espectrales."],
+["s","laser","Tecnología","2001","Agostini, Krausz y L’Huillier","Pulsos de attosegundo","Se generan pulsos de ≈10⁻¹⁸ s. Nobel 2023.","Permiten observar el movimiento de electrones en tiempo real.","Pulso ultracorto sobre un átomo."],
+["s","laser","Tecnología","1985–2018","Strickland, Mourou y Ashkin","Pulsos intensos y pinzas ópticas","Amplificación de pulsos “chirpeados” (1985) y pinzas ópticas que atrapan partículas con luz. Nobel 2018.","Cirugía ocular láser y manipulación de células.","Haz enfocado sujetando una célula."],
+["s","fiber","Tecnología","2017","Pan Jianwei, Yin et al.","Entrelazamiento por satélite","El satélite Micius distribuye fotones entrelazados entre estaciones separadas ≈1200 km.","Hito hacia redes y criptografía cuánticas.","Satélite y haces hacia dos estaciones."],
+["s","particle","Experimento","2020","Zhong et al. (USTC)","Ventaja cuántica con fotones","El procesador Jiuzhang resuelve muestreo de bosones con luz, tarea muy costosa para computadoras clásicas.","Computación cuántica fotónica; ventaja en una tarea específica, no un ordenador universal.","Red de interferómetros y detectores."]
+];
+var R=["Aspect, A., Dalibard, J., & Roger, G. (1982). Experimental test of Bell’s inequalities using time-varying analyzers. <i>Physical Review Letters, 49</i>(25), 1804–1807.",
+"Compton, A. H. (1923). A quantum theory of the scattering of X-rays by light elements. <i>Physical Review, 21</i>(5), 483–502.",
+"Darrigol, O. (2012). <i>A history of optics from Greek antiquity to the nineteenth century</i>. Oxford University Press.",
+"Dyson, F. W., Eddington, A. S., & Davidson, C. (1920). A determination of the deflection of light by the Sun’s gravitational field. <i>Philosophical Transactions of the Royal Society A, 220</i>, 291–333.",
+"Einstein, A. (1905). Über einen die Erzeugung und Verwandlung des Lichtes betreffenden heuristischen Gesichtspunkt. <i>Annalen der Physik, 322</i>(6), 132–148.",
+"Feynman, R. P. (1985). <i>QED: The strange theory of light and matter</i>. Princeton University Press.",
+"Huygens, C. (1690). <i>Traité de la lumière</i>. Pieter van der Aa.",
+"Kao, K. C., & Hockham, G. A. (1966). Dielectric-fibre surface waveguides for optical frequencies. <i>Proceedings of the IEE, 113</i>(7), 1151–1158.",
+"Kimble, H. J., Dagenais, M., & Mandel, L. (1977). Photon antibunching in resonance fluorescence. <i>Physical Review Letters, 39</i>(11), 691–695.",
+"Lindberg, D. C. (1976). <i>Theories of vision from al-Kindi to Kepler</i>. University of Chicago Press.",
+"Maiman, T. H. (1960). Stimulated optical radiation in ruby. <i>Nature, 187</i>(4736), 493–494.",
+"Maxwell, J. C. (1865). A dynamical theory of the electromagnetic field. <i>Philosophical Transactions of the Royal Society of London, 155</i>, 459–512.",
+"Michelson, A. A., & Morley, E. W. (1887). On the relative motion of the earth and the luminiferous ether. <i>American Journal of Science, 34</i>(203), 333–345.",
+"Newton, I. (1704). <i>Opticks: Or, a treatise of the reflexions, refractions, inflexions and colours of light</i>. Royal Society.",
+"Nobel Prize Outreach. (2022). <i>The Nobel Prize in Physics 2022</i>. https://www.nobelprize.org/prizes/physics/2022/summary/",
+"Planck, M. (1901). Über das Gesetz der Energieverteilung im Normalspectrum. <i>Annalen der Physik, 309</i>(3), 553–563.",
+"Rashed, R. (1990). A pioneer in anaclastics: Ibn Sahl on burning mirrors and lenses. <i>Isis, 81</i>(3), 464–491.",
+"Sabra, A. I. (Trad.). (1989). <i>The optics of Ibn al-Haytham, Books I–III: On direct vision</i>. The Warburg Institute.",
+"Yin, J., Cao, Y., Li, Y.-H., Liao, S.-K., Zhang, L., Ren, J.-G., … Pan, J.-W. (2017). Satellite-based entanglement distribution over 1200 kilometers. <i>Science, 356</i>(6343), 1140–1144.",
+"Young, T. (1802). The Bakerian lecture: On the theory of light and colours. <i>Philosophical Transactions of the Royal Society of London, 92</i>, 12–48.",
+"Zhong, H.-S., Wang, H., Deng, Y.-H., Chen, M.-C., Peng, L.-C., Luo, Y.-H., … Pan, J.-W. (2020). Quantum computational advantage using photons. <i>Science, 370</i>(6523), 1460–1463."];
+var t=document.getElementById("t"),nav=document.getElementById("nav"),cur="",sp;
+D.forEach(function(e){
+ if(e[0]!==cur){cur=e[0];var s=document.createElement("section");s.className="era "+cur;s.id="era-"+cur;
+  s.innerHTML="<h2>"+E[cur][0]+"<small>"+E[cur][1]+"</small></h2><div class='sp'></div>";t.appendChild(s);sp=s.lastChild;
+  var b=document.createElement("button");b.className=cur;b.textContent=E[cur][0];b.onclick=function(id){return function(){document.getElementById(id).scrollIntoView({behavior:"smooth"})}}("era-"+cur);nav.appendChild(b);}
+ var v=document.createElement("article");v.className="ev";
+ v.innerHTML="<div class='ic'><svg><use href='#"+e[1]+"'/></svg></div><div><span class='yr'>"+e[3]+"</span><span class='k'>"+e[2]+"</span><div class='who'>"+e[4]+"</div></div><div><h3>"+e[5]+"</h3><p>"+e[6]+"</p></div><div class='full cl'><b>Importancia:</b> "+e[7]+"<br><span class='m'><b>Ilustración sugerida:</b> "+e[8]+"</span></div>";
+ sp.appendChild(v);});
+document.getElementById("refs").innerHTML=R.map(function(r){return "<p>"+r+"</p>"}).join("");
+</script></body></html>
